@@ -1,0 +1,26 @@
+cache.directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
+jdk: oraclejdk8
+
+language: java
+
+services:
+    - docker
+
+sudo: required
+
+before_install:
+    - ./gradlew buildAppDocker
+
+    - ./gradlew runDocker
+
+install: true
+
+script:
+    - ./gradlew testIntegration
+
+before_cache:
+    - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+    - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
