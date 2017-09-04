@@ -21,18 +21,36 @@ portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(lexiconTestDisplayContext.getRedirect());
 
 renderResponse.setTitle(LanguageUtil.get(request, "add-new-super-hero"));
+
+Element element = lexiconTestDisplayContext.getElement();
+
+long elementId = BeanParamUtil.getLong(element, request, "elementId");
 %>
 
-<aui:form action="" cssClass="container-fluid-1280">
+<portlet:actionURL name="updateElement" var="updateElementURL" />
+
+<portlet:actionURL name="/lexicon_test/edit_element" var="editElementURL">
+	<portlet:param name="mvcRenderCommandName" value="/lexicon_test/edit_element" />
+</portlet:actionURL>
+
+<aui:form action="<%= editElementURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
+	<aui:input name="redirect" type="hidden" value="<%= lexiconTestDisplayContext.getRedirect() %>" />
+	<aui:input name="elementId" type="hidden" value="<%= elementId %>" />
+
+	<aui:model-context bean="<%= element %>" model="<%= Element.class %>" />
+
 	<aui:fieldset-group markupView="lexicon">
 		<aui:fieldset>
-			<aui:input name="title" />
+			<aui:input name="name" />
+
+			<aui:input name="url" />
 		</aui:fieldset>
 	</aui:fieldset-group>
+
+	<aui:button-row>
+		<aui:button cssClass="btn-lg" type="submit" />
+
+		<aui:button cssClass="btn-lg" href="<%= lexiconTestDisplayContext.getRedirect() %>" type="cancel" />
+	</aui:button-row>
 </aui:form>
-
-<aui:button-row>
-	<aui:button cssClass="btn-lg" type="submit" />
-
-	<aui:button cssClass="btn-lg" type="cancel" />
-</aui:button-row>

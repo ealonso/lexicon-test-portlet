@@ -12,44 +12,13 @@
  * details.
  */
 
-package com.liferay.lexicon.test.web.internal.model;
+package com.liferay.lexicon.test.web.internal.constant;
 
 /**
- * @author Eudaldo Alonso
+ * @author Eduardo Garcia
  */
-public class Element {
+public class LexiconTestWebKeys {
 
-	public Element(String name, String url) {
-		_name = name;
-		_url = url;
-	}
-
-	public long getElementId() {
-		return _elementId;
-	}
-
-	public String getName() {
-		return _name;
-	}
-
-	public String getUrl() {
-		return _url;
-	}
-
-	public void setElementId(long elementId) {
-		_elementId = elementId;
-	}
-
-	public void setName(String name) {
-		_name = name;
-	}
-
-	public void setUrl(String url) {
-		_url = url;
-	}
-
-	private long _elementId;
-	private String _name;
-	private String _url;
+	public static final String LEXICON_TEST_ELEMENT = "LEXICON_TEST_ELEMENT";
 
 }

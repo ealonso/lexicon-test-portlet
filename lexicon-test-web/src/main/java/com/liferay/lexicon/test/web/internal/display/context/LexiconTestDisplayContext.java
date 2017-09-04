@@ -14,7 +14,9 @@
 
 package com.liferay.lexicon.test.web.internal.display.context;
 
-import com.liferay.lexicon.test.web.internal.model.Element;
+import com.liferay.lexicon.test.model.Element;
+import com.liferay.lexicon.test.service.ElementLocalServiceUtil;
+import com.liferay.lexicon.test.web.internal.constant.LexiconTestWebKeys;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -23,14 +25,10 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.portlet.PortletURL;
 
@@ -67,10 +65,18 @@ public class LexiconTestDisplayContext {
 
 		PortletURL portletURL = _portletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcPath", "/edit_element.jsp");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/lexicon_test/edit_element");
 		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
 
 		return portletURL;
+	}
+
+	public Element getElement() {
+		Element element = (Element)_request.getAttribute(
+			LexiconTestWebKeys.LEXICON_TEST_ELEMENT);
+
+		return element;
 	}
 
 	public String getOrderByCol() {
@@ -125,28 +131,16 @@ public class LexiconTestDisplayContext {
 		_searchContainer.setEmptyResultsMessageCssClass(
 			"taglib-empty-result-message-header-has-plus-btn");
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		_searchContainer.setTotal(_getTotal());
 		_searchContainer.setResults(
-			ListUtil.subList(
-				_getResults(), _searchContainer.getStart(),
-				_searchContainer.getEnd()));
+			ElementLocalServiceUtil.getElements(
+				themeDisplay.getScopeGroupId(),
+			_searchContainer.getStart(), _searchContainer.getEnd()));
 
 		return _searchContainer;
-	}
-
-	private List<Element> _getResults() {
-		List<Element> elements = new ArrayList<>();
-
-		for (int i = 0; i < _names.length; i++) {
-			String name = _names[i];
-
-			String url =
-				_request.getContextPath() + "/images/" + _urls[i] + "_xl.png";
-
-			elements.add(new Element(name, url));
-		}
-
-		return elements;
 	}
 
 	private int _getTotal() {
@@ -154,7 +148,7 @@ public class LexiconTestDisplayContext {
 	}
 
 	private String _displayStyle;
-	private String[] _names = new String[] {
+	private String[] _names = {
 		"Batman", "Captain America", "Flash", "Green Lantern", "IronMan",
 		"Robin", "SpiderMan", "Superman", "Wolverine", "WonderWoman"
 	};
@@ -165,7 +159,7 @@ public class LexiconTestDisplayContext {
 	private String _redirect;
 	private final HttpServletRequest _request;
 	private SearchContainer _searchContainer;
-	private String[] _urls = new String[] {
+	private String[] _urls = {
 		"batman", "captainamerica", "flash", "greenlantern", "ironman", "robin",
 		"spiderman", "superman", "wolverine", "wonderwoman"
 	};

@@ -1,0 +1,159 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+
+import com.liferay.gradle.plugins.app.docker.AppDockerPlugin
+import com.liferay.gradle.util.GradleUtil
+
+buildscript {
+	dependencies {
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.app.docker", version: "1.0.0"
+	}
+
+	repositories {
+		maven {
+			url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		}
+	}
+}
+
+allprojects {
+	repositories {
+		mavenLocal()
+
+		maven {
+			url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		}
+	}
+}
+
+configure(subprojects.findAll {!it.childProjects}) {
+	liferay {
+		deployDir = new File(getLiferayDeployDir())
+	}
+
+	task createLiferayDeployDir(type: Exec) {
+		commandLine 'mkdir', '-m', '777', '-p', "${getLiferayDeployDir()}"
+	}
+
+	deploy {
+		dependsOn createLiferayDeployDir
+	}
+
+	setUpTestableTomcat {
+		enabled = false
+	}
+
+	startTestableTomcat {
+		enabled = false
+	}
+
+	stopTestableTomcat {
+		enabled = false
+	}
+
+}
+
+if (GradleUtil.getProperty(project, "docker.apply.plugin").toBoolean()) {
+	apply plugin: AppDockerPlugin
+
+	appDocker {
+		imageName this.getImageName()
+		imageUser this.getUserName()
+		inputDir "lexicon-test-docker"
+	}
+
+	docker {
+		registryCredentials {
+			username = System.getenv().get("DOCKER_USER")
+			password = System.getenv().get("DOCKER_PWD")
+		}
+	}
+
+	buildAppDockerImage {
+		buildAppDockerImage.dependsOn subprojects.findAll{!it.childProjects}.deploy
+	}
+
+	allprojects {
+		ext {
+			dockerDestinationDir = prepareAppDockerImageInputDir.destinationDir
+		}
+	}
+
+	// This avoids the plugin building the image again on push
+
+	pushAppDockerImage.dependsOn = []
+
+	afterEvaluate {
+		for (DockerTagImage dockerTagImage in tasks.withType(DockerTagImage)) {
+			dockerTagImage.dependsOn = []
+			dockerTagImage.imageId = "${appDocker.imageUser}/${appDocker.imageName}"
+		}
+	}
+}
+
+task checkDocker() {
+	doLast {
+		def url = "http://localhost:${project.getProperty('portal.port')}"
+
+		println("Trying to reach " + url)
+
+		while (true) {
+			try {
+				print(".")
+
+				url.toURL().text
+
+				println("Portal startup finished")
+
+				break
+			}
+			catch (Exception e) {
+				Thread.sleep(1000)
+			}
+		}
+	}
+}
+
+def getLiferayDeployDir() {
+	return "${rootDir}/${project.property('deploy.dir')}"
+}
+
+task runDocker(type: Exec) {
+	def javaOpts = project.getProperty('java.opts')
+
+	if (project.hasProperty('debug')) {
+		javaOpts += ' ' + project.getProperty('debug.opts')
+	}
+
+	commandLine 'docker', 'run',
+			'-e', "JAVA_OPTS=$javaOpts",
+			'-e', "ROOT_DIR=${rootDir}",
+			'-p', "${project.getProperty('portal.port')}:8080",
+			'-p', '11311:11311',
+			'-p', '8099:8099',
+			'-v', "${getLiferayDeployDir()}:/usr/local/liferay-ce-portal-7.0-ga4/osgi/modules/",
+			'-d',
+			'--name', "liferay-portal",
+			getImageNameWithUserAndVersion()
+
+	finalizedBy checkDocker
+}
+
+def getImageName() {
+	return project.property("docker.image.name")
+}
+
+def getImageVersion() {
+	return project.property("docker.image.version")
+}
+
+def getUserName() {
+	return project.property("docker.username")
+}
+
+def getImageNameWithUser() {
+	return getUserName() + "/" + getImageName()
+}
+
+def getImageNameWithUserAndVersion() {
+	return getImageNameWithUser() + ":" + getImageVersion()
+}

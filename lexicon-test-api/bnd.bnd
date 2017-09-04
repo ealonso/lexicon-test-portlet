@@ -1,0 +1,8 @@
+Bundle-Name: Lexicon Test API
+Bundle-SymbolicName: com.liferay.lexicon.test.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.lexicon.test.exception,\
+	com.liferay.lexicon.test.model,\
+	com.liferay.lexicon.test.service,\
+	com.liferay.lexicon.test.service.persistence
