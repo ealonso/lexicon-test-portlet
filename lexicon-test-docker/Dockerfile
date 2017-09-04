@@ -1,4 +1,4 @@
-FROM liferay/portal:7.0.3-ga4-tomcat
+FROM cgoncas/slim-liferay-portal-image:20170904123527
 MAINTAINER Ruben Pulido <ruben.pulido@liferay.com>
 
 COPY *.?ar $LIFERAY_HOME/osgi/modules/
