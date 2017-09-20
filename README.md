@@ -1,3 +1,3 @@
-# lexicon-test-portlet
+# game-portlet
 
-Lexicon test portlet for spanish symposium
+A Game of Liferay

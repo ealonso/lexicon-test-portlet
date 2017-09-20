@@ -1,0 +1,15 @@
+{
+  "computeType": "BUILD_GENERAL1_SMALL",
+  "image": "cgoncas/aws-codebuild-docker-image-pulpo-test",
+  "type": "LINUX_CONTAINER",
+  "environmentVariables": [
+    {
+      "name": "TEST_BROWSER",
+      "value": "chrome"
+    },
+    {
+      "name": "TEST_URL",
+      "value": "http://APPLICATION_NAME-ENVIRONMENT_SUFFIX.REGION.elasticbeanstalk.com"
+    }
+  ]
+}

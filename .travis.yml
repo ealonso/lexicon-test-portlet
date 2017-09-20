@@ -1,0 +1,121 @@
+addons:
+    apt:
+        sources:
+            - google-chrome
+        packages:
+            - google-chrome-stable
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
+jdk: oraclejdk8
+
+language: java
+
+services:
+    - docker
+
+sudo: required
+
+before_install:
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" != "master" ]; then
+          echo "Terminating build since there is also a pull request build running.";
+          travis_terminate 0;
+       fi'
+
+    # Install Catch Reports
+
+    - curl -O https://liferay-labs.github.io/reports-catcher/catch-reports.sh
+    - chmod +x catch-reports.sh
+
+    # Load config variables
+
+    - source ${TRAVIS_BUILD_DIR}/game-deployment/aws/deployment-pipeline/config/setup_deployment_pipeline.env
+
+    - ./gradlew buildAppDocker runDocker -Pdocker.image.name=$DOCKER_IMAGE_NAME -Pdocker.image.version=latest -Pdocker.org=$DOCKER_ORG
+
+install: true
+
+script:
+    # Fail when a line fails
+    - set pipefail
+
+    - ./gradlew testIntegration
+
+     # Publish docker image to Docker Hub
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ]; then
+           ./gradlew pushAppDockerImage -Pdocker.image.name=$DOCKER_IMAGE_NAME -Pdocker.org=$DOCKER_ORG;
+       fi'
+
+    - export DOCKER_IMAGE_VERSION=$(docker images ${DOCKER_ORG}/${DOCKER_IMAGE_NAME} --format "{{.Tag}}" | grep ".*T.*Z")
+
+    # Clone Sepia Repo
+
+    - cd ${TRAVIS_BUILD_DIR}/..
+    - git clone https://github.com/liferay-labs/sepia-deployment-scripts.git
+    - cd ${TRAVIS_BUILD_DIR}
+
+    # moreutils (to be able to use sponge command)
+
+    - sudo apt-get install moreutils
+
+    # Install pip3
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ] && [ "$RECREATE_PIPELINE" = "true" ]; then
+           sudo apt-get -y install python3-pip python-dev;
+           sudo pip3 install -U setuptools;
+           sudo pip3 install -U virtualenvwrapper;
+           python3 -V;
+           pip3 -V;
+       fi'
+
+    # Install AWS CLI and EB
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ] && [ "$RECREATE_PIPELINE" = "true" ]; then
+           cd ${TRAVIS_BUILD_DIR}/../sepia-deployment-scripts/aws/deployment-pipeline/setup/codepipeline-setup/prereqs/cli/;
+           chmod a+x ./setup_aws_cli_bundle.sh;
+           ./setup_aws_cli_bundle.sh;
+       fi'
+
+   # Delete Pipeline
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ] && [ "$RECREATE_PIPELINE" = "true" ]; then
+           cd ${TRAVIS_BUILD_DIR}/../sepia-deployment-scripts/aws/deployment-pipeline/cleanup/codepipeline-cleanup/;
+           chmod a+x ./cleanup_deployment_pipeline.sh;
+           ./cleanup_deployment_pipeline.sh -c ${TRAVIS_BUILD_DIR}/game-deployment/aws/deployment-pipeline/config;
+       fi'
+
+    # Update deployment repository to trigger Continuous Delivery Pipeline
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ]; then
+           cd ${TRAVIS_BUILD_DIR}/../sepia-deployment-scripts/travis/;
+           chmod a+x ./update_deployment_repository.sh;
+           ./update_deployment_repository.sh -c ${TRAVIS_BUILD_DIR}/game-deployment/aws/deployment-pipeline/config;
+       fi'
+
+    # Update deployment specifications
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ] && [ "$RECREATE_PIPELINE" = "true" ]; then
+          cd ${TRAVIS_BUILD_DIR}/../sepia-deployment-scripts/aws/deployment-pipeline/setup/codepipeline-setup/;
+          chmod a+x ./update_deployment_specifications.sh;
+          ./update_deployment_specifications.sh -c ${TRAVIS_BUILD_DIR}/game-deployment/aws/deployment-pipeline/config;
+       fi'
+
+   # Setup Pipeline prereqs and Pipeline
+
+    - 'if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ] && [ "$RECREATE_PIPELINE" = "true" ]; then
+          cd ${TRAVIS_BUILD_DIR}/../sepia-deployment-scripts/aws/deployment-pipeline/setup/codepipeline-setup/;
+          chmod a+x ./setup_deployment_pipeline.sh;
+          ./setup_deployment_pipeline.sh -c ${TRAVIS_BUILD_DIR}/game-deployment/aws/deployment-pipeline/config;
+          cd ${TRAVIS_BUILD_DIR};
+       fi'
+
+before_cache:
+    - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+    - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+after_script:
+    - ./catch-reports.sh
