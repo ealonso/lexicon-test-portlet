@@ -1,3 +1,10 @@
+addons:
+    apt:
+        sources:
+            - google-chrome
+        packages:
+            - google-chrome-stable
+
 cache:
   directories:
     - $HOME/.gradle/caches/
