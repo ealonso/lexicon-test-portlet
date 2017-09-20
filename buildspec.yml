@@ -1,0 +1,17 @@
+phases:
+  install:
+    commands:
+      - echo install phase started on `date`
+  pre_build:
+    commands:
+      - echo pre_build phase started on `date`
+  build:
+    commands:
+      - echo build phase started on `date`
+      - chmod a+x $CODEBUILD_SRC_DIR/gradlew
+      - $CODEBUILD_SRC_DIR/gradlew -Pdocker.apply.plugin=false testIntegration
+  post_build:
+    commands:
+      - echo post_build phase started on `date`
+
+version: 0.2
