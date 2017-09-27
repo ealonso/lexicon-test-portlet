@@ -99,6 +99,18 @@ public class CharacterLocalServiceImpl extends CharacterLocalServiceBaseImpl {
 	}
 
 	@Override
+	public List<Character> getCharactersByGroupIdAndName(
+		long groupId, String name, int start, int end) {
+
+		return characterPersistence.findByG_N(groupId, name, start, end);
+	}
+
+	@Override
+	public int getCharactersByGroupIdAndNameCount(long groupId, String name) {
+		return characterPersistence.countByG_N(groupId, name);
+	}
+
+	@Override
 	public int getCharactersCount(long groupId) {
 		return characterPersistence.countByGroupId(groupId);
 	}
