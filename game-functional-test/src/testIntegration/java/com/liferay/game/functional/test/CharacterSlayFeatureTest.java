@@ -88,7 +88,7 @@ public class CharacterSlayFeatureTest {
 		}
 	}
 
-	@And("^(.+) is alive")
+	@And("^(.+) is ALIVE")
 	public void verifyAliveCharacter(String characterName) {
 		String cardLocator = "//*[contains(@class,'card-row')][contains(.,'" +
 			characterName + "')]";
@@ -103,7 +103,7 @@ public class CharacterSlayFeatureTest {
 		}
 	}
 
-	@Then("^(.+) is dead$")
+	@Then("^(.+) is DEAD")
 	public void verifyDeadCharacter(String characterName) {
 		WebElement character = CommonSteps.getCharacterCard(
 			browser, characterName);

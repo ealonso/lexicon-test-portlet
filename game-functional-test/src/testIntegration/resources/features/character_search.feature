@@ -17,6 +17,6 @@ Feature: Search of Characters
     Scenario: Search a character by house
 
         Given a character called Arya Stark exists
-        When I search for alive
+        When I search for ALIVE
         Then I see Arya Stark in the list of characters
         
