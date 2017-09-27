@@ -265,6 +265,20 @@ public class CharacterLocalServiceWrapper implements CharacterLocalService,
 		return _characterLocalService.getCharacters(groupId, start, end);
 	}
 
+	@Override
+	public java.util.List<com.liferay.game.model.Character> getCharactersByGroupIdAndName(
+		long groupId, java.lang.String name, int start, int end) {
+		return _characterLocalService.getCharactersByGroupIdAndName(groupId,
+			name, start, end);
+	}
+
+	@Override
+	public int getCharactersByGroupIdAndNameCount(long groupId,
+		java.lang.String name) {
+		return _characterLocalService.getCharactersByGroupIdAndNameCount(groupId,
+			name);
+	}
+
 	/**
 	* Returns all the characters matching the UUID and company.
 	*

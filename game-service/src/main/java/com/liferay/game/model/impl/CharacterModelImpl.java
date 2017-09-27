@@ -119,8 +119,8 @@ public class CharacterModelImpl extends BaseModelImpl<Character>
 			true);
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
-	public static final long UUID_COLUMN_BITMASK = 4L;
-	public static final long NAME_COLUMN_BITMASK = 8L;
+	public static final long NAME_COLUMN_BITMASK = 4L;
+	public static final long UUID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * Converts the soap model instance into a normal model instance.
@@ -464,7 +464,15 @@ public class CharacterModelImpl extends BaseModelImpl<Character>
 	public void setName(String name) {
 		_columnBitmask = -1L;
 
+		if (_originalName == null) {
+			_originalName = _name;
+		}
+
 		_name = name;
+	}
+
+	public String getOriginalName() {
+		return GetterUtil.getString(_originalName);
 	}
 
 	@JSON
@@ -618,6 +626,8 @@ public class CharacterModelImpl extends BaseModelImpl<Character>
 		characterModelImpl._setOriginalCompanyId = false;
 
 		characterModelImpl._setModifiedDate = false;
+
+		characterModelImpl._originalName = characterModelImpl._name;
 
 		characterModelImpl._columnBitmask = 0;
 	}
@@ -803,6 +813,7 @@ public class CharacterModelImpl extends BaseModelImpl<Character>
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private String _name;
+	private String _originalName;
 	private String _url;
 	private String _status;
 	private long _columnBitmask;

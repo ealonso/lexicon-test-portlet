@@ -230,6 +230,14 @@ public interface CharacterLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Character> getCharacters(long groupId, int start, int end);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Character> getCharactersByGroupIdAndName(long groupId,
+		java.lang.String name, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCharactersByGroupIdAndNameCount(long groupId,
+		java.lang.String name);
+
 	/**
 	* Returns all the characters matching the UUID and company.
 	*

@@ -257,6 +257,17 @@ public class CharacterLocalServiceUtil {
 		return getService().getCharacters(groupId, start, end);
 	}
 
+	public static java.util.List<com.liferay.game.model.Character> getCharactersByGroupIdAndName(
+		long groupId, java.lang.String name, int start, int end) {
+		return getService()
+				   .getCharactersByGroupIdAndName(groupId, name, start, end);
+	}
+
+	public static int getCharactersByGroupIdAndNameCount(long groupId,
+		java.lang.String name) {
+		return getService().getCharactersByGroupIdAndNameCount(groupId, name);
+	}
+
 	/**
 	* Returns all the characters matching the UUID and company.
 	*

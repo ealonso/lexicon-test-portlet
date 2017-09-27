@@ -207,6 +207,15 @@ public class CharacterPersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_N() throws Exception {
+		_persistence.countByG_N(RandomTestUtil.nextLong(), StringPool.BLANK);
+
+		_persistence.countByG_N(0L, StringPool.NULL);
+
+		_persistence.countByG_N(0L, (String)null);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		Character newCharacter = addCharacter();
 
