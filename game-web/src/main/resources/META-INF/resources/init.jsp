@@ -27,17 +27,30 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.game.model.Character" %><%@
 page import="com.liferay.game.model.CharacterStatus" %><%@
+page import="com.liferay.game.service.CharacterLocalServiceUtil" %><%@
 page import="com.liferay.game.web.internal.constant.GameWebKeys" %><%@
 page import="com.liferay.game.web.internal.display.context.GameDisplayContext" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.PortletURLUtil" %><%@
+page import="com.liferay.portal.kernel.search.Hits" %><%@
+page import="com.liferay.portal.kernel.search.Indexer" %><%@
+page import="com.liferay.portal.kernel.search.IndexerRegistryUtil" %><%@
+page import="com.liferay.portal.kernel.search.SearchContext" %><%@
+page import="com.liferay.portal.kernel.search.SearchContextFactory" %><%@
+page import="com.liferay.portal.kernel.search.SearchException" %><%@
+page import="com.liferay.portal.kernel.search.SearchResult" %><%@
+page import="com.liferay.portal.kernel.search.SearchResultUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.StringPool" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.taglib.search.ResultRow" %>
 
-<%@ page import="java.util.Objects" %>
+<%@ page import="java.util.ArrayList" %><%@
+page import="java.util.List" %><%@
+page import="java.util.Objects" %>
+
+<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

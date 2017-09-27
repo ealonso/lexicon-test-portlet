@@ -16,6 +16,10 @@
 
 <%@ include file="/init.jsp" %>
 
+<%
+PortletURL portletURL = renderResponse.createRenderURL();
+%>
+
 <liferay-portlet:renderURL varImpl="mainURL" />
 
 <aui:nav-bar cssClass="collapse-basic-search" markupView="lexicon">
@@ -24,7 +28,11 @@
 	</aui:nav>
 
 	<aui:nav-bar-search>
-		<liferay-ui:input-search markupView="lexicon" />
+		<aui:form action="<%= portletURL.toString() %>" name="searchFm">
+			<aui:nav-bar-search>
+				<liferay-ui:input-search markupView="lexicon" />
+			</aui:nav-bar-search>
+		</aui:form>
 	</aui:nav-bar-search>
 </aui:nav-bar>
 
@@ -73,6 +81,49 @@
 			id="characters"
 			searchContainer="<%= gameDisplayContext.getSearchContainer() %>"
 		>
+
+			<%
+			String keywords = request.getParameter("keywords");
+
+			if ((keywords != null) && !keywords.isEmpty()) {
+				Indexer indexer = IndexerRegistryUtil.getIndexer(Character.class.getName());
+
+				try {
+					SearchContext searchContext = SearchContextFactory.getInstance(request);
+
+					searchContext.setAttribute("paginationType", "more");
+					searchContext.setEnd(searchContainer.getEnd());
+					searchContext.setCompanyId(themeDisplay.getCompanyId());
+					searchContext.setGroupIds(new long[] {themeDisplay.getScopeGroupId()});
+					searchContext.setKeywords(keywords);
+
+					Hits hits = indexer.search(searchContext);
+
+					searchContainer.setTotal(hits.getLength());
+
+					List<SearchResult> searchResults =
+							SearchResultUtil.getSearchResults(
+									hits, themeDisplay.getLocale());
+
+					List<Character> results = new ArrayList<>();
+
+					for (SearchResult searchResult : searchResults) {
+						Character character = CharacterLocalServiceUtil.getCharacter(
+								searchResult.getClassPK());
+
+						results.add(character);
+					}
+
+					searchContainer.setResults(results);
+				}
+				catch (SearchException se) {
+				}
+			}
+			else {
+				searchContainer.setResults(CharacterLocalServiceUtil.getCharacters(themeDisplay.getScopeGroupId(), searchContainer.getStart(), searchContainer.getEnd()));
+			}
+			%>
+
 			<liferay-ui:search-container-row
 				className="com.liferay.game.model.Character"
 				keyProperty="characterId"

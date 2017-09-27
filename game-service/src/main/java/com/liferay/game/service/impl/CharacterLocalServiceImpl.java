@@ -14,11 +14,15 @@
 
 package com.liferay.game.service.impl;
 
+import aQute.bnd.annotation.component.Component;
+
 import com.liferay.game.model.Character;
 import com.liferay.game.model.CharacterStatus;
 import com.liferay.game.service.base.CharacterLocalServiceBaseImpl;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ServiceContext;
 
 import java.util.Date;
@@ -38,8 +42,10 @@ import java.util.List;
  * @see CharacterLocalServiceBaseImpl
  * @see com.liferay.game.service.CharacterLocalServiceUtil
  */
+@Component
 public class CharacterLocalServiceImpl extends CharacterLocalServiceBaseImpl {
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Character addCharacter(
 			long userId, long groupId, String name, String url,
@@ -69,6 +75,7 @@ public class CharacterLocalServiceImpl extends CharacterLocalServiceBaseImpl {
 		return character;
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public Character deleteCharacter(long characterId) throws PortalException {
 		Character character = characterPersistence.findByPrimaryKey(
@@ -79,6 +86,7 @@ public class CharacterLocalServiceImpl extends CharacterLocalServiceBaseImpl {
 		return character;
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public void deleteCharacters(long groupId) throws PortalException {
 		for (Character character :
@@ -115,6 +123,7 @@ public class CharacterLocalServiceImpl extends CharacterLocalServiceBaseImpl {
 		return characterPersistence.countByGroupId(groupId);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Character killCharacter(long characterId) throws PortalException {
 		Character character = characterPersistence.findByPrimaryKey(
