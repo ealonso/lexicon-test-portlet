@@ -1,0 +1,6 @@
+Bundle-Name: Game Service
+Bundle-SymbolicName: com.liferay.game.service
+Bundle-Version: 1.0.0
+Export-Package: com.liferay.game.search
+Liferay-Require-SchemaVersion: 1.0.0
+Liferay-Service: true
