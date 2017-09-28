@@ -15,6 +15,7 @@
 package com.liferay.game.model.impl;
 
 import aQute.bnd.annotation.ProviderType;
+
 import com.liferay.portal.kernel.util.Validator;
 
 /**
@@ -46,4 +47,5 @@ public class CharacterImpl extends CharacterBaseImpl {
 
 		return url;
 	}
+
 }
