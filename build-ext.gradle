@@ -222,6 +222,7 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
 			fileTree(dir: it,
 					exclude: [
 							'**/constants/*',
+							'**/constant/*',
 							'**/exception/*Exception*',
 							'**/model/*Model*',
 							'**/model/*Soap*',
