@@ -1,0 +1,268 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+
+import com.liferay.gradle.plugins.app.docker.AppDockerPlugin
+import com.liferay.gradle.util.GradleUtil
+
+import org.kt3k.gradle.plugin.CoverallsPlugin
+
+import javax.management.remote.JMXConnectorFactory
+import javax.management.remote.JMXServiceURL
+
+buildscript {
+	dependencies {
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.app.docker", version: "1.0.0"
+		classpath group: "org.kt3k.gradle.plugin", name: "coveralls-gradle-plugin", version: "2.6.3"
+		classpath group: "org.kt3k.gradle.plugin", name: "coveralls-gradle-plugin", version: "2.6.3"
+
+	}
+
+	repositories {
+		maven {
+			url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		}
+	}
+}
+
+allprojects {
+	apply plugin: JacocoPlugin
+
+	jacoco {
+		toolVersion = "0.7.8"
+	}
+
+	repositories {
+		mavenLocal()
+
+		maven {
+			url "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		}
+	}
+}
+
+apply plugin: CoverallsPlugin
+
+configure(subprojects.findAll {!it.childProjects}) {
+	node {
+		nodeVersion "8.1.0"
+		npmVersion "5.3.0"
+	}
+
+	liferay {
+		deployDir = new File(getLiferayDeployDir())
+	}
+
+	task createLiferayDeployDir(type: Exec) {
+		commandLine 'mkdir', '-m', '777', '-p', "${getLiferayDeployDir()}"
+	}
+
+	deploy {
+		dependsOn createLiferayDeployDir
+	}
+}
+
+configure(subprojects.findAll {!it.childProjects && !it.name.contains('theme')}) {
+	setUpTestableTomcat {
+		enabled = false
+	}
+
+	startTestableTomcat {
+		enabled = false
+	}
+
+	stopTestableTomcat {
+		enabled = false
+	}
+
+	testIntegration {
+		ignoreFailures = false
+
+		systemProperty "test.url", getTestUrl()
+
+		environment "TEST_URL", getTestUrl()
+	}
+}
+
+if (GradleUtil.getProperty(project, "docker.apply.plugin").toBoolean()) {
+	apply plugin: AppDockerPlugin
+
+	appDocker {
+		imageName this.getImageName()
+		imageUser this.getOrg()
+		inputDir "game-docker"
+	}
+
+	docker {
+		registryCredentials {
+			username = System.getenv().get("DOCKER_USER")
+			password = System.getenv().get("DOCKER_PWD")
+		}
+	}
+
+	buildAppDockerImage {
+		buildAppDockerImage.dependsOn subprojects.findAll{!it.childProjects}.deploy
+	}
+
+	allprojects {
+		ext {
+			dockerDestinationDir = prepareAppDockerImageInputDir.destinationDir
+		}
+	}
+
+	// This avoids the plugin building the image again on push
+
+	pushAppDockerImage.dependsOn = []
+
+	afterEvaluate {
+		for (DockerTagImage dockerTagImage in tasks.withType(DockerTagImage)) {
+			dockerTagImage.dependsOn = []
+			dockerTagImage.imageId = "${appDocker.imageUser}/${appDocker.imageName}"
+		}
+	}
+}
+
+task checkDocker() {
+	doLast {
+		def url = "http://localhost:${project.getProperty('portal.port')}"
+
+		println("Trying to reach " + url)
+
+		while (true) {
+			try {
+				print(".")
+
+				url.toURL().text
+
+				println("Portal startup finished")
+
+				break
+			}
+			catch (Exception e) {
+				Thread.sleep(1000)
+			}
+		}
+	}
+}
+
+def getLiferayDeployDir() {
+	return "${rootDir}/${project.property('deploy.dir')}"
+}
+
+task copyJacocoAgent(type: Copy) {
+	configurations.jacocoAgent.asFileTree.each {
+		from( zipTree(it) )
+	}
+	into "${rootDir}/build/jacoco"
+}
+
+task runDocker(type: Exec) {
+	dependsOn copyJacocoAgent
+
+	def javaOpts = project.getProperty('java.opts')
+
+	if (project.hasProperty('debug')) {
+		javaOpts += ' ' + project.getProperty('debug.opts')
+	}
+
+	commandLine 'docker', 'run',
+			'-e', "JAVA_OPTS=$javaOpts",
+			'-e', "ROOT_DIR=${rootDir}",
+			'-p', "${project.getProperty('portal.port')}:8080",
+			'-p', '11311:11311',
+			'-p', '8099:8099',
+			'-v', "${getLiferayDeployDir()}:/usr/local/liferay-ce-portal-7.0-ga4/deploy/",
+			'-v', "${rootDir}/build/jacoco:/jacoco/",
+			'-d',
+			'--name', "liferay-portal",
+			getImageNameWithUserAndVersion()
+
+	finalizedBy checkDocker
+}
+
+def getImageName() {
+	return "${project.property('docker.image.name')}"
+}
+
+def getImageVersion() {
+	return "${project.property('docker.image.version')}"
+}
+
+def getOrg() {
+	return "${project.property('docker.org')}"
+}
+
+def getImageNameWithUser() {
+	return getOrg() + "/" + getImageName()
+}
+
+def getImageNameWithUserAndVersion() {
+	return getImageNameWithUser() + ":" + getImageVersion()
+}
+
+def getTestUrl() {
+	return System.getenv().get("TEST_URL")?: "http://localhost:8080"
+}
+
+task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+	additionalSourceDirs = files(subprojects.findAll{!it.childProjects && it.name != "game-theme"}.sourceSets.main.allSource.srcDirs)
+	sourceDirectories = files(subprojects.findAll{!it.childProjects && it.name != "game-theme"}.sourceSets.main.allSource.srcDirs)
+	classDirectories =  files(subprojects.findAll{!it.childProjects && it.name != "game-theme"}.sourceSets.main.output)
+	executionData = files(subprojects.findAll{!it.childProjects && it.name != "game-theme"}.jacocoTestReport.executionData, "${rootDir}/build/jacoco/testIntegration.exec")
+
+	onlyIf = { true }
+
+	reports {
+		html.enabled = true
+		xml.enabled = true
+		xml.destination "${rootDir}/build/reports/jacoco/test/jacocoTestReport.xml"
+		csv.enabled = false
+	}
+
+	afterEvaluate {
+		classDirectories = files(classDirectories.files.collect {
+			fileTree(dir: it,
+					exclude: [
+							'**/constants/*',
+							'**/constant/*',
+							'**/exception/*Exception*',
+							'**/model/*Model*',
+							'**/model/*Soap*',
+							'**/model/*Wrapper*',
+							'**/model/impl/*BaseImpl*',
+							'**/model/impl/*CacheModel*',
+							'**/model/impl/*ModelImpl*',
+							'**/service/*ServiceUtil*',
+							'**/service/*ServiceWrapper*',
+							'**/service/base/*',
+							'**/service/http/*',
+							'**/service/persistence/*Util*',
+							'**/service/persistence/impl/*PersistenceImpl*',
+							'**/service/persistence/impl/*FinderBaseImpl*',
+							'**/service/util/*',
+							'**/test/util/*'
+					])
+		})
+	}
+
+	doFirst {
+		executionData = files(executionData.findAll { it.exists() })
+	}
+}
+
+task dumpJacoco {
+	doLast {
+		def serverUrl = 'service:jmx:rmi:///jndi/rmi://localhost:8099/jmxrmi'
+		String beanName = "org.jacoco:type=Runtime"
+		def server = JMXConnectorFactory.connect(new JMXServiceURL(serverUrl)).MBeanServerConnection
+		def gmxb = new GroovyMBean(server, beanName)
+
+		gmxb.dump(true)
+	}
+}
+
+tasks.coveralls {
+	dependsOn jacocoRootReport
+}
+
+coveralls.sourceDirs = files(subprojects.findAll{!it.childProjects && it.name != "game-theme"}.sourceSets.main.allSource.srcDirs).collect {
+	file -> file.absolutePath
+}

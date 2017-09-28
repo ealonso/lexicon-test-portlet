@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<arquillian
+		xmlns="http://jboss.org/schema/arquillian"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd"
+>
+	<extension qualifier="graphene">
+		<property name="url">${env.TEST_URL}</property>
+	</extension>
+	<extension qualifier="webdriver">
+		<property name="browser">chrome</property>
+		<property name="chromeArguments">--headless --no-sandbox --enable-logging  --disable-gpu</property>
+		<property name="chromeExtensions">./src/testIntegration/resources/JSErrorCollector.crx</property>
+	</extension>
+</arquillian>

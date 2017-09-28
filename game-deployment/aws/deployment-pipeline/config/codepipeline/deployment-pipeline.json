@@ -1,0 +1,241 @@
+{
+  "pipeline": {
+    "roleArn": "arn:aws:iam::AWS_ACCOUNT_ID:role/AWS-CodePipeline-Service",
+    "stages": [
+      {
+        "name": "get-source",
+        "actions": [
+          {
+            "inputArtifacts": [],
+            "name": "get-deployment-source",
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "ThirdParty",
+              "version": "1",
+              "provider": "GitHub"
+            },
+            "outputArtifacts": [
+              {
+                "name": "deployment-source-output"
+              }
+            ],
+            "configuration": {
+              "Owner": "DEPLOYMENT_ARTIFACTS_ORG",
+              "Repo": "DEPLOYMENT_ARTIFACTS_REPO",
+              "PollForSourceChanges": "true",
+              "Branch": "DEPLOYMENT_ARTIFACTS_BRANCH",
+              "OAuthToken": "GITHUB_TOKEN"
+            },
+            "runOrder": 1
+          },
+          {
+            "inputArtifacts": [],
+            "name": "get-test-source",
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "ThirdParty",
+              "version": "1",
+              "provider": "GitHub"
+            },
+            "outputArtifacts": [
+              {
+                "name": "test-source-output"
+              }
+            ],
+            "configuration": {
+              "Owner": "TEST_ORG",
+              "Repo": "TEST_REPO",
+              "PollForSourceChanges": "false",
+              "Branch": "TEST_BRANCH",
+              "OAuthToken": "GITHUB_TOKEN"
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "deploy-to-dev",
+        "actions": [
+          {
+            "inputArtifacts": [
+              {
+                "name": "deployment-source-output"
+              }
+            ],
+            "name": "deploy-to-dev",
+            "actionTypeId": {
+              "category": "Deploy",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "ElasticBeanstalk"
+            },
+            "outputArtifacts": [],
+            "configuration": {
+              "ApplicationName": "APPLICATION_NAME",
+              "EnvironmentName": "APPLICATION_NAME-dev"
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "test-dev",
+        "actions": [
+          {
+            "inputArtifacts": [
+              {
+                "name": "test-source-output"
+              }
+            ],
+            "name": "test-dev",
+            "actionTypeId": {
+              "category": "Test",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "CodeBuild"
+            },
+            "outputArtifacts": [
+              {
+                "name": "test-dev-output"
+              }
+            ],
+            "configuration": {
+              "ProjectName": "APPLICATION_NAME-test-dev"
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "deploy-to-pre",
+        "actions": [
+          {
+            "inputArtifacts": [
+              {
+                "name": "deployment-source-output"
+              }
+            ],
+            "name": "deploy-to-pre",
+            "actionTypeId": {
+              "category": "Deploy",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "ElasticBeanstalk"
+            },
+            "outputArtifacts": [],
+            "configuration": {
+              "ApplicationName": "APPLICATION_NAME",
+              "EnvironmentName": "APPLICATION_NAME-pre"
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "test-pre",
+        "actions": [
+          {
+            "inputArtifacts": [
+              {
+                "name": "test-source-output"
+              }
+            ],
+            "name": "test-pre",
+            "actionTypeId": {
+              "category": "Test",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "CodeBuild"
+            },
+            "outputArtifacts": [
+              {
+                "name": "test-pre-output"
+              }
+            ],
+            "configuration": {
+              "ProjectName": "APPLICATION_NAME-test-pre"
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "manual-approval",
+        "actions": [
+          {
+            "inputArtifacts": [],
+            "name": "manual-approval",
+            "actionTypeId": {
+              "category": "Approval",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "Manual"
+            },
+            "outputArtifacts": [],
+            "configuration": {},
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "deploy-to-prod",
+        "actions": [
+          {
+            "inputArtifacts": [
+              {
+                "name": "deployment-source-output"
+              }
+            ],
+            "name": "deploy-to-prod",
+            "actionTypeId": {
+              "category": "Deploy",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "ElasticBeanstalk"
+            },
+            "outputArtifacts": [],
+            "configuration": {
+              "ApplicationName": "APPLICATION_NAME",
+              "EnvironmentName": "APPLICATION_NAME-prod"
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "test-prod",
+        "actions": [
+          {
+            "inputArtifacts": [
+              {
+                "name": "test-source-output"
+              }
+            ],
+            "name": "test-prod",
+            "actionTypeId": {
+              "category": "Test",
+              "owner": "AWS",
+              "version": "1",
+              "provider": "CodeBuild"
+            },
+            "outputArtifacts": [
+              {
+                "name": "test-prod-output"
+              }
+            ],
+            "configuration": {
+              "ProjectName": "APPLICATION_NAME-test-prod"
+            },
+            "runOrder": 1
+          }
+        ]
+      }
+    ],
+    "artifactStore": {
+      "type": "S3",
+      "location": "codepipeline-APPLICATION_NAME"
+    },
+    "name": "APPLICATION_NAME-deployment-pipeline",
+    "version": 20
+  }
+}
