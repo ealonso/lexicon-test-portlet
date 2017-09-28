@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" default-destroy-method="destroy" default-init-method="afterPropertiesSet" xsi:schemaLocation=" http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<bean class="com.liferay.game.service.impl.CharacterLocalServiceImpl" id="com.liferay.game.service.CharacterLocalService" />
+	<bean class="com.liferay.game.service.impl.CharacterServiceImpl" id="com.liferay.game.service.CharacterService" />
+	<bean class="com.liferay.game.service.persistence.impl.CharacterPersistenceImpl" id="com.liferay.game.service.persistence.CharacterPersistence" parent="basePersistence" />
+</beans>

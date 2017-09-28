@@ -1,0 +1,4 @@
+Bundle-Name: Game Web
+Bundle-SymbolicName: com.liferay.game.web
+Bundle-Version: 1.0.0
+Web-ContextPath: /game-web

@@ -1,0 +1,8 @@
+Bundle-Name: Game API
+Bundle-SymbolicName: com.liferay.game.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.game.exception,\
+	com.liferay.game.model,\
+	com.liferay.game.service,\
+	com.liferay.game.service.persistence

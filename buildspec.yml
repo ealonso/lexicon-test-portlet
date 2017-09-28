@@ -1,0 +1,24 @@
+phases:
+  install:
+    commands:
+      - echo install phase started on `date`
+      - curl -O https://liferay-labs.github.io/reports-catcher/catch-reports.sh
+      - chmod +x $CODEBUILD_SRC_DIR/catch-reports.sh
+  pre_build:
+    commands:
+      - echo pre_build phase started on `date`
+  build:
+    commands:
+      - echo build phase started on `date`
+      - chmod a+x $CODEBUILD_SRC_DIR/gradlew
+      - cd $CODEBUILD_SRC_DIR/game-acceptance-tests
+      - ../gradlew -Pdocker.apply.plugin=false testIntegration
+      - cd $CODEBUILD_SRC_DIR/game-functional-tests
+      - ../gradlew -Pdocker.apply.plugin=false testIntegration
+      - cd $CODEBUILD_SRC_DIR
+  post_build:
+    commands:
+      - echo post_build phase started on `date`
+      - $CODEBUILD_SRC_DIR/catch-reports.sh
+
+version: 0.2
